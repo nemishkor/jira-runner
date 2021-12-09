@@ -8,34 +8,41 @@
 
 // KF
 #include <KLocalizedString>
+#include <KRunner/QueryMatch>
+#include <QDesktopServices>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
+#include <QString>
 
 JiraRunner::JiraRunner(QObject *parent, const QVariantList &args)
     : Plasma::AbstractRunner(parent, args)
 {
     setObjectName(QStringLiteral("JiraRunner"));
+    setPriority(LowPriority);
+    setMinLetterCount(4);
 }
 
 JiraRunner::~JiraRunner()
 {
 }
 
-
 void JiraRunner::match(Plasma::RunnerContext &context)
 {
     const QString term = context.query();
-    if (term.length() < 3) {
-        return;
+    const QRegularExpression regex(QString::fromUtf8("\\w+-\\d+"));
+    const QRegularExpressionMatch termMatch = regex.match(term);
+    if(termMatch.hasMatch()){
+        Plasma::QueryMatch match(this);
+        match.setText(termMatch.captured());
+        context.addMatch(match);
     }
-
-    // TODO
 }
 
 void JiraRunner::run(const Plasma::RunnerContext &context, const Plasma::QueryMatch &match)
 {
     Q_UNUSED(context)
     Q_UNUSED(match)
-
-    // TODO
+    QDesktopServices::openUrl(QUrl(QString::fromUtf8("https://dermpro.atlassian.net/browse/").append(match.text())));
 }
 
 K_EXPORT_PLASMA_RUNNER_WITH_JSON(JiraRunner, "plasma-runner-jirarunner.json")
